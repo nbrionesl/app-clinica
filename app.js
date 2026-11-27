@@ -57,12 +57,24 @@
   function save() { store.set(KEY, JSON.stringify(state)); if (channel) channel.postMessage('update'); }
 
   /* ---------- Preferencias de accesibilidad ---------- */
-  let prefs = Object.assign({ size: 100, contrast: false }, JSON.parse(store.get(PREFS) || '{}'));
+  const PREF_DEFAULTS = { size: 100, contrast: false, spacing: false, links: false, plain: false };
+  let prefs = Object.assign({}, PREF_DEFAULTS, JSON.parse(store.get(PREFS) || '{}'));
   function applyPrefs() {
-    document.documentElement.style.fontSize = prefs.size + '%';
-    document.documentElement.dataset.contrast = prefs.contrast ? 'high' : 'normal';
-    const b = $('#btn-contrast'); if (b) b.setAttribute('aria-pressed', String(prefs.contrast));
+    const h = document.documentElement;
+    h.style.fontSize = prefs.size + '%';
+    h.dataset.contrast = prefs.contrast ? 'high' : 'normal';
+    h.dataset.spacing = prefs.spacing ? 'on' : 'off';
+    h.dataset.links = prefs.links ? 'on' : 'off';
+    h.dataset.plain = prefs.plain ? 'on' : 'off';
+    $$('[data-pref]').forEach((b) => b.setAttribute('aria-pressed', String(!!prefs[b.dataset.pref])));
+    const o = $('#size-out'); if (o) o.textContent = prefs.size + '%';
     store.set(PREFS, JSON.stringify(prefs));
+  }
+  function toggleA11y(open) {
+    const p = $('#a11y-panel'), f = $('#a11y-fab');
+    const show = open === undefined ? p.hidden : open;
+    p.hidden = !show; f.setAttribute('aria-expanded', String(show));
+    if (show) { const first = $('button', p); if (first) first.focus(); } else if (open === false) f.focus();
   }
 
   /* ---------- Anuncios (lector de pantalla + aviso visual) ---------- */
@@ -189,8 +201,14 @@
       <section class="hero" aria-labelledby="h-hero">
         <h1 id="h-hero">Bienvenidos a ${esc(c.name)}</h1>
         <p>Agende citas, consulte el expediente de sus hijos e hijas y reciba seguimiento de tratamientos, todo desde su celular. Sin filas y sin llamadas.</p>
-        <p class="muted">${esc(c.address)}, ${esc(c.city)} · ${esc(c.hours)} · Tel. ${esc(c.phone)}</p>
+        <p class="hero__meta">${esc(c.address)}, ${esc(c.city)} · ${esc(c.hours)} · Tel. ${esc(c.phone)}</p>
       </section>
+      <ul class="features" aria-label="Beneficios">
+        <li><span class="fi" aria-hidden="true">🗓</span>Citas en minutos, sin filas ni llamadas</li>
+        <li><span class="fi" aria-hidden="true">📋</span>Expediente y resultados en su celular</li>
+        <li><span class="fi" aria-hidden="true">💊</span>Seguimiento de recetas y dosis</li>
+        <li><span class="fi" aria-hidden="true">🩺</span>Agenda médica en tiempo real</li>
+      </ul>
       <h2>¿Cómo desea ingresar?</h2>
       <p class="muted">En este prototipo no se pide contraseña; elija un perfil para explorar.</p>
       <div class="role-cards">
@@ -577,15 +595,18 @@
     render(true);
   }
 
+  $('#a11y-fab').addEventListener('click', () => toggleA11y());
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#a11y-panel').hidden) toggleA11y(false); });
+  document.addEventListener('click', (e) => { const w = e.target.closest('.a11y-widget'); if (!w && !$('#a11y-panel').hidden) toggleA11y(false); });
   document.addEventListener('click', async (e) => {
     const t = e.target.closest('[data-action]'); if (!t) return;
     const act = t.dataset.action, id = t.dataset.id;
     switch (act) {
-      case 'font+': prefs.size = Math.min(150, prefs.size + 10); applyPrefs(); announce(`Texto al ${prefs.size}%`, false); break;
-      case 'font-': prefs.size = Math.max(90, prefs.size - 10); applyPrefs(); announce(`Texto al ${prefs.size}%`, false); break;
-      case 'contrast': prefs.contrast = !prefs.contrast; applyPrefs(); announce(prefs.contrast ? 'Alto contraste activado' : 'Alto contraste desactivado', false); break;
+      case 'font+': prefs.size = Math.min(150, prefs.size + 10); applyPrefs(); break;
+      case 'font-': prefs.size = Math.max(90, prefs.size - 10); applyPrefs(); break;
+      case 'pref': prefs[t.dataset.pref] = !prefs[t.dataset.pref]; applyPrefs(); break;
+      case 'a11y-reset': prefs = Object.assign({}, PREF_DEFAULTS); applyPrefs(); announce('Ajustes de accesibilidad quitados.', false); break;
       case 'print': window.print(); break;
-      case 'reset': if (await confirmDialog({ title: 'Restablecer datos', body: 'Se borrarán los cambios y se cargarán de nuevo los datos de demostración.', ok: 'Restablecer', danger: true })) { state = window.buildSeed(); ui.booking = null; save(); render(); announce('Datos restablecidos.'); } break;
       case 'close-dialog': t.closest('dialog').close('cancel'); break;
       case 'booking-reset': ui.booking = null; break;
       case 'booking-back': ui.booking.step--; ui.booking.error = null; render(); break;

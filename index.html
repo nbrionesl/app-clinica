@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Clínica Pediátrica Pequeños Pasos</title>
   <meta name="description" content="Prototipo: citas en línea, expediente electrónico y panel médico para una clínica pediátrica en Heredia.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,13 +17,8 @@
     <div class="site-header__inner">
       <a class="brand" href="#/">
         <span class="brand__logo" aria-hidden="true">♥</span>
-        <span>Pequeños Pasos <span class="visually-hidden">— Clínica pediátrica, inicio</span></span>
+        <span class="brand__text">Pequeños Pasos <small>Clínica pediátrica · Heredia</small><span class="visually-hidden"> — Inicio</span></span>
       </a>
-      <div class="a11y-tools" role="group" aria-label="Opciones de accesibilidad">
-        <button type="button" data-action="font-" aria-label="Reducir tamaño del texto">A−</button>
-        <button type="button" data-action="font+" aria-label="Aumentar tamaño del texto">A+</button>
-        <button type="button" data-action="contrast" id="btn-contrast" aria-pressed="false">Alto contraste</button>
-      </div>
     </div>
   </header>
 
@@ -30,8 +28,30 @@
 
   <footer class="site-footer">
     <p>Prototipo de demostración con datos ficticios. No usar con información real de pacientes.</p>
-    <button type="button" class="btn btn--ghost btn--sm" data-action="reset">Restablecer datos de demostración</button>
   </footer>
+
+  <!-- Botón flotante de accesibilidad -->
+  <div class="a11y-widget">
+    <div class="a11y-panel" id="a11y-panel" role="group" aria-labelledby="a11y-title" hidden>
+      <h2 id="a11y-title">Accesibilidad</h2>
+      <div class="a11y-row">
+        <span id="lbl-size">Tamaño del texto</span>
+        <div class="a11y-size" role="group" aria-labelledby="lbl-size">
+          <button type="button" data-action="font-" aria-label="Reducir texto">A−</button>
+          <output id="size-out" aria-live="polite">100%</output>
+          <button type="button" data-action="font+" aria-label="Aumentar texto">A+</button>
+        </div>
+      </div>
+      <button type="button" class="a11y-opt" data-action="pref" data-pref="contrast" aria-pressed="false">Alto contraste</button>
+      <button type="button" class="a11y-opt" data-action="pref" data-pref="spacing" aria-pressed="false">Más espacio entre letras y líneas</button>
+      <button type="button" class="a11y-opt" data-action="pref" data-pref="links" aria-pressed="false">Resaltar enlaces</button>
+      <button type="button" class="a11y-opt" data-action="pref" data-pref="plain" aria-pressed="false">Fuente simple (sin Poppins)</button>
+      <button type="button" class="a11y-reset" data-action="a11y-reset">Quitar ajustes</button>
+    </div>
+    <button type="button" class="a11y-fab" id="a11y-fab" aria-expanded="false" aria-controls="a11y-panel" aria-label="Opciones de accesibilidad">
+      <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><circle cx="12" cy="4.2" r="2.2" fill="currentColor"/><path d="M4 8.2c0-.6.5-1 1-1h14c.6 0 1 .5 1 1s-.4 1-1 1h-5v3.6l2.5 6.6c.2.5-.1 1.1-.6 1.3-.5.2-1.1-.1-1.3-.6L12 15.4l-1.6 4.7c-.2.5-.8.8-1.3.6-.5-.2-.8-.8-.6-1.3l2.5-6.6V9.2H6c-.6 0-1-.4-1-1z" fill="currentColor"/></svg>
+    </button>
+  </div>
 
   <div id="live" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
   <div id="toasts" aria-hidden="true"></div>
