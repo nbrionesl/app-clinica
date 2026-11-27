@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es-CR" data-contrast="normal">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clínica Pediátrica Pequeños Pasos</title>
+  <meta name="description" content="Prototipo: citas en línea, expediente electrónico y panel médico para una clínica pediátrica en Heredia.">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Saltar al contenido principal</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a class="brand" href="#/">
+        <span class="brand__logo" aria-hidden="true">♥</span>
+        <span>Pequeños Pasos <span class="visually-hidden">— Clínica pediátrica, inicio</span></span>
+      </a>
+      <div class="a11y-tools" role="group" aria-label="Opciones de accesibilidad">
+        <button type="button" data-action="font-" aria-label="Reducir tamaño del texto">A−</button>
+        <button type="button" data-action="font+" aria-label="Aumentar tamaño del texto">A+</button>
+        <button type="button" data-action="contrast" id="btn-contrast" aria-pressed="false">Alto contraste</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="main-nav" id="nav" aria-label="Navegación principal"></nav>
+
+  <main id="main" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <p>Prototipo de demostración con datos ficticios. No usar con información real de pacientes.</p>
+    <button type="button" class="btn btn--ghost btn--sm" data-action="reset">Restablecer datos de demostración</button>
+  </footer>
+
+  <div id="live" class="visually-hidden" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div id="toasts" aria-hidden="true"></div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
