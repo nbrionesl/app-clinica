@@ -89,7 +89,9 @@
   function save() { store.set(KEY, JSON.stringify(state)); if (channel) channel.postMessage('update'); }
 
   /* ---------- Preferencias de accesibilidad ---------- */
-  const PREF_DEFAULTS = { size: 100, contrast: false, spacing: false, links: false, plain: false };
+  const PREF_DEFAULTS = { size: 100, contrast: false, spacing: false, links: false, plain: false, theme: 'auto' };
+  const mqDark = window.matchMedia('(prefers-color-scheme: dark)');
+  const THEME_NAMES = { auto: 'Automático', light: 'Claro', dark: 'Oscuro' };
   let prefs = Object.assign({}, PREF_DEFAULTS, JSON.parse(store.get(PREFS) || '{}'));
   function applyPrefs() {
     const h = document.documentElement;
@@ -98,6 +100,8 @@
     h.dataset.spacing = prefs.spacing ? 'on' : 'off';
     h.dataset.links = prefs.links ? 'on' : 'off';
     h.dataset.plain = prefs.plain ? 'on' : 'off';
+    h.dataset.theme = prefs.theme === 'auto' ? (mqDark.matches ? 'dark' : 'light') : prefs.theme;
+    const tb = $('#theme-btn'); if (tb) tb.textContent = 'Tema: ' + THEME_NAMES[prefs.theme];
     $$('[data-pref]').forEach((b) => b.setAttribute('aria-pressed', String(!!prefs[b.dataset.pref])));
     const o = $('#size-out'); if (o) o.textContent = prefs.size + '%';
     store.set(PREFS, JSON.stringify(prefs));
@@ -171,7 +175,7 @@
     const h = document.documentElement, web = parts[0] === 'medico';
     h.dataset.ui = web ? 'web' : 'app';
     h.dataset.frame = !web && mqWide.matches ? 'on' : 'off';
-    const dark = !parts[0] || (parts[0] === 'familia' && (!parts[1] || parts[1] === 'perfil'));
+    const dark = !parts[0];
     h.dataset.top = dark ? 'dark' : 'light';
     h.dataset.booking = parts[0] === 'familia' && parts[1] === 'citas' && parts[2] === 'nueva' ? 'on' : 'off';
   }
@@ -185,7 +189,7 @@
   function navFor(parts) {
     if (parts[0] === 'familia') {
       if (parts[1] === 'citas' && parts[2] === 'nueva') return [];
-      return [['familia', 'home', 'Inicio'], ['familia/citas', 'calendar', 'Citas'], ['familia/citas/nueva', 'plus', 'Agendar cita', 'add'], ['familia/expediente', 'file', 'Expediente'], ['familia/perfil', 'user', 'Perfil']];
+      return [['familia', 'home', 'Inicio'], ['familia/citas', 'calendar', 'Citas'], ['familia/expediente', 'file', 'Expediente'], ['familia/perfil', 'user', 'Perfil']];
     }
     if (parts[0] === 'medico') return [['medico', 'calendar', 'Agenda'], ['medico/pacientes', 'user', 'Pacientes'], ['familia', 'swap', 'Ir a familias']];
     return [];
@@ -298,23 +302,24 @@
     let nextHtml;
     if (next) {
       const p = patient(next.patientId), d = doctor(next.doctorId);
-      nextHtml = `<section class="card next-card" aria-labelledby="h-next"><h2 id="h-next" class="visually-hidden">Próxima cita</h2>
+      nextHtml = `<section class="card next-card next-card--hero" aria-labelledby="h-next"><h2 id="h-next" class="visually-hidden">Próxima cita</h2>
         <div class="next-card__top">${dateBox(next.date)}<div class="next-card__info"><span>Próxima cita · ${esc(fmtDate(next.date).split(',')[0])}</span><strong>${fmtTime(next.time)} · ${esc(firstName(p.name))}</strong><span>${esc(next.reason)}</span><span>${esc(d.name)}</span></div></div>
         ${apptActions(next, p)}</section>`;
     } else {
       nextHtml = `<section class="card empty" aria-labelledby="h-next"><span class="bubble">${ic('calendar')}</span><h2 id="h-next">No tiene citas próximas</h2><a class="btn btn--primary" href="#/familia/citas/nueva">Agendar ahora</a></section>`;
     }
+    const kid1 = kids.length === 1 ? '/' + kids[0].id : '';
     return {
       title: 'Inicio',
       html: `
-      <div class="app-top"><div class="app-top__row"><div><p>${greeting()}</p><h1>${esc(g.name.split(' ').slice(0, 2).join(' '))}</h1></div>
-        <a class="avatar avatar--glass" href="#/familia/perfil" aria-label="Mi perfil">${esc(g.name.split(' ').slice(0, 2).map((w) => w[0]).join(''))}</a></div></div>
-      <div class="overlap">${nextHtml}</div>
+      <div class="large-title"><div><p class="eyebrow">${greeting()}</p><h1>${esc(g.name.split(' ').slice(0, 2).join(' '))}</h1></div>
+        <a class="avlink" href="#/familia/perfil" aria-label="Mi perfil">${avatar(g.name, 'md')}</a></div>
+      <div class="pad">${nextHtml}</div>
       <div class="sec"><div class="tiles">
         <a class="tile tile--primary" href="#/familia/citas/nueva"><span class="bubble">${ic('plus')}</span>Agendar una cita</a>
         <a class="tile" href="#/familia/expediente"><span class="bubble">${ic('file')}</span>Expediente</a>
-        <a class="tile" href="#/familia/expediente${kids.length === 1 ? '/' + kids[0].id : ''}${kids.length === 1 ? '/laboratorio' : ''}"><span class="bubble bubble--violet">${ic('flask')}</span>Resultados</a>
-        <a class="tile" href="#/familia/expediente${kids.length === 1 ? '/' + kids[0].id : ''}${kids.length === 1 ? '/recetas' : ''}"><span class="bubble bubble--warm">${ic('pill')}</span>Recetas</a></div></div>
+        <a class="tile" href="#/familia/expediente${kid1}${kids.length === 1 ? '/laboratorio' : ''}"><span class="bubble bubble--violet">${ic('flask')}</span>Resultados</a>
+        <a class="tile" href="#/familia/expediente${kid1}${kids.length === 1 ? '/recetas' : ''}"><span class="bubble bubble--warm">${ic('pill')}</span>Recetas</a></div></div>
       <section class="sec" aria-labelledby="h-kids"><div class="sec__head"><h2 id="h-kids">Mis hijos e hijas</h2></div>
         <div class="strip">${kids.map((k) => `<a class="kid-card" href="#/familia/expediente/${k.id}">${avatar(k.name, 'md')}<strong>${esc(firstName(k.name))}</strong><span>${ageText(k.birth)}</span>${k.allergies.length ? `<span class="allergy">Alergia: ${esc(k.allergies[0])}</span>` : '<span>Sin alergias</span>'}</a>`).join('')}</div></section>
       <section class="sec" aria-labelledby="h-tr"><div class="sec__head"><h2 id="h-tr">Tratamientos de hoy</h2></div><div class="pad">
@@ -332,7 +337,7 @@
     const list = ui.apptTab === 'hist' ? past : up;
     return {
       title: 'Mis citas',
-      html: `<div class="app-bar"><div style="flex:1"><h1>Mis citas</h1><p>Reprograme o cancele sin llamar.</p></div></div>
+      html: `<div class="large-title"><div><h1>Citas</h1><p class="eyebrow">Reprograme o cancele sin llamar</p></div><a class="icon-btn icon-btn--tint" href="#/familia/citas/nueva" aria-label="Agendar una cita">${ic('plus')}</a></div>
       <div class="segmented" role="group" aria-label="Ver citas">
         <button type="button" data-action="tab-appt" data-tab="prox" data-fid="tab-prox" aria-pressed="${ui.apptTab !== 'hist'}">Próximas (${up.length})</button>
         <button type="button" data-action="tab-appt" data-tab="hist" data-fid="tab-hist" aria-pressed="${ui.apptTab === 'hist'}">Historial (${past.length})</button></div>
@@ -341,13 +346,13 @@
   }
 
   /* ---------- Asistente de nueva cita ---------- */
-  function dayChips(doctorId, selected) {
+  function dayChips(doctorId, selected, ignoreId, box = '#slotbox', booking = true) {
     const out = [], doc = doctor(doctorId);
     for (let i = 0; i < 45 && out.length < 14; i++) {
       const d = addDays(new Date(), i); if (!doc.days.includes(d.getDay())) continue;
-      const k = ymd(d); if (!slotsFor(doctorId, k).length) continue;
+      const k = ymd(d); if (!slotsFor(doctorId, k, ignoreId).length) continue;
       const wd = d.toLocaleDateString('es-CR', { weekday: 'short' }).replace('.', ''), mo = d.toLocaleDateString('es-CR', { month: 'short' }).replace('.', '');
-      out.push(`<div class="daychip"><input type="radio" name="date" id="dc-${k}" value="${k}" ${selected === k ? 'checked' : ''} data-slot-date data-box="#slotbox" data-booking="date"><label for="dc-${k}"><small>${wd}</small><strong>${d.getDate()}</strong><small>${mo}</small></label></div>`);
+      out.push(`<div class="daychip"><input type="radio" name="date" id="dc-${k}" value="${k}" ${selected === k ? 'checked' : ''} data-slot-date data-box="${box}" ${booking ? 'data-booking="date"' : ''}><label for="dc-${k}"><small>${wd}</small><strong>${d.getDate()}</strong><small>${mo}</small></label></div>`);
     }
     return out.join('') || '<p class="alert alert--info">No hay fechas disponibles pronto con este médico.</p>';
   }
@@ -389,10 +394,10 @@
         <li class="row"><span class="bubble bubble--violet">${ic('file')}</span><div class="row__main"><span>Médico</span><strong>${esc(d.name)}</strong></div></li>
         <li class="row"><span class="bubble bubble--ok">${ic('calendar')}</span><div class="row__main"><span>Fecha y hora</span><strong>${esc(fmtDate(b.date))}, ${fmtTime(b.time)}</strong></div></li></ul>`;
     }
-    const back = b.step > 1 ? `<button type="button" class="icon-btn" data-action="booking-back" aria-label="Paso anterior">${ic('back')}</button>` : `<a class="icon-btn" href="#/familia/citas" data-action="booking-reset" aria-label="Cancelar y volver a mis citas">${ic('back')}</a>`;
+    const back = b.step > 1 ? `<button type="button" class="back" data-action="booking-back">${ic('back')}<span>Atrás</span></button>` : '';
     return {
       title: 'Agendar cita',
-      html: `<div class="app-bar">${back}<h1>${titles[b.step - 1]}</h1></div>
+      html: `<div class="navbar"><div class="navbar__l">${back}</div><h1 class="navbar__t">${titles[b.step - 1]}</h1><div class="navbar__r"><a class="back back--plain" href="#/familia/citas" data-action="booking-reset">Cancelar</a></div></div>
       <div class="progress-bar" role="progressbar" aria-label="Progreso" aria-valuemin="1" aria-valuemax="4" aria-valuenow="${b.step}"><span style="width:${b.step * 25}%"></span></div>
       <p class="step-label">Paso ${b.step} de 4</p>
       <form class="pad" data-form="booking" novalidate>${err}${body}
@@ -417,18 +422,20 @@
   /* ---------- Perfil ---------- */
   function viewProfile() {
     const g = state.guardians[0], c = window.CLINIC;
+    const rowBtn = (cls, ico, t, s, extra) => `<span class="bubble ${cls}">${ic(ico)}</span><div class="row__main"><strong>${t}</strong>${s ? `<span>${s}</span>` : ''}</div>${extra || ''}`;
     return {
       title: 'Perfil',
-      html: `<div class="app-top" style="padding-bottom:2rem;text-align:center"><div style="position:relative;z-index:1"><span class="avatar avatar--lg avatar--glass" style="margin:0 auto .5rem;width:72px;height:72px;font-size:1.5rem">${esc(g.name.split(' ').slice(0, 2).map((w) => w[0]).join(''))}</span>
-        <h1>${esc(g.name)}</h1><p>${esc(g.email)} · ${esc(g.phone)}</p></div></div>
-      <section class="sec pad" aria-labelledby="h-cl"><h2 id="h-cl">La clínica</h2><ul class="rows">
-        <li><a class="row" href="tel:${esc(c.phone.replace(/\D/g, ''))}"><span class="bubble">${ic('phone')}</span><div class="row__main"><strong>Llamar a la clínica</strong><span>${esc(c.phone)} · ${esc(c.hours)}</span></div>${ic('chev', 'chev')}</a></li>
-        <li class="row"><span class="bubble bubble--ok">${ic('chat')}</span><div class="row__main"><strong>WhatsApp</strong><span>${esc(c.whatsapp)}</span></div></li>
-        <li class="row"><span class="bubble bubble--violet">${ic('home')}</span><div class="row__main"><strong>Dirección</strong><span>${esc(c.address)}, ${esc(c.city)}</span></div></li></ul></section>
-      <section class="sec pad" aria-labelledby="h-ct"><h2 id="h-ct">Cuenta y ajustes</h2><ul class="rows">
-        <li><button type="button" class="row" style="width:100%;background:none;border:0;font:inherit;text-align:left;cursor:pointer;color:inherit" data-action="a11y-open"><span class="bubble bubble--warn">${ic('access')}</span><div class="row__main"><strong>Accesibilidad</strong><span>Tamaño de texto, contraste y más</span></div>${ic('chev', 'chev')}</button></li>
-        <li><a class="row" href="#/medico"><span class="bubble bubble--warm">${ic('swap')}</span><div class="row__main"><strong>Cambiar a personal de la clínica</strong><span>Ver el panel médico (demostración)</span></div>${ic('chev', 'chev')}</a></li>
-        <li><a class="row" href="#/"><span class="bubble">${ic('back')}</span><div class="row__main"><strong>Volver a la portada</strong></div>${ic('chev', 'chev')}</a></li></ul></section>`
+      html: `<div class="large-title"><h1>Perfil</h1></div>
+      <div class="pad"><ul class="rows"><li class="row row--profile">${avatar(g.name, 'lg')}<div class="row__main"><strong style="font-size:1.1rem">${esc(g.name)}</strong><span>${esc(g.email)}</span><span>${esc(g.phone)}</span></div></li></ul></div>
+      <section class="sec pad" aria-labelledby="h-cl"><h2 id="h-cl" class="group-title">La clínica</h2><ul class="rows">
+        <li><a class="row" href="tel:${esc(c.phone.replace(/\D/g, ''))}">${rowBtn('', 'phone', 'Llamar a la clínica', `${esc(c.phone)} · ${esc(c.hours)}`, ic('chev', 'chev'))}</a></li>
+        <li class="row">${rowBtn('bubble--ok', 'chat', 'WhatsApp', esc(c.whatsapp))}</li>
+        <li class="row">${rowBtn('bubble--violet', 'home', 'Dirección', `${esc(c.address)}, ${esc(c.city)}`)}</li></ul></section>
+      <section class="sec pad" aria-labelledby="h-ct"><h2 id="h-ct" class="group-title">Ajustes</h2><ul class="rows">
+        <li><button type="button" class="row row--btn" data-action="a11y-open">${rowBtn('bubble--warn', 'access', 'Accesibilidad y apariencia', 'Texto, contraste, tema claro u oscuro', ic('chev', 'chev'))}</button></li>
+        <li><a class="row" href="#/medico">${rowBtn('bubble--warm', 'swap', 'Cambiar a personal de la clínica', 'Ver el panel médico (demostración)', ic('chev', 'chev'))}</a></li>
+        <li><a class="row" href="#/">${rowBtn('', 'back', 'Volver a la portada', '', ic('chev', 'chev'))}</a></li></ul>
+        <p class="group-foot">Versión de demostración con datos ficticios.</p></section>`
     };
   }
 
@@ -442,7 +449,7 @@
     if (!staff && !pid) {
       const kids = myKids();
       if (kids.length === 1) pid = kids[0].id;
-      else return { title: 'Expediente', html: `<div class="app-bar"><div style="flex:1"><h1>Expediente</h1><p>Elija a quién desea consultar.</p></div></div>
+      else return { title: 'Expediente', html: `<div class="large-title"><div><h1>Expediente</h1><p class="eyebrow">Elija a quién desea consultar</p></div></div>
         <div class="pad"><ul class="rows">${kids.map((k) => `<li><a class="row" href="#/familia/expediente/${k.id}">${avatar(k.name, 'md')}<div class="row__main"><strong>${esc(k.name)}</strong><span>${ageText(k.birth)}${k.allergies.length ? ' · Alergia: ' + esc(k.allergies.join(', ')) : ''}</span></div>${ic('chev', 'chev')}</a></li>`).join('')}</ul></div>` };
     }
     const p = patient(pid);
@@ -450,10 +457,11 @@
     sec = SECTIONS.some((s) => s[0] === sec) ? sec : 'resumen';
     const fns = { resumen: secResumen, vacunas: secVacunas, crecimiento: secCrecimiento, laboratorio: secLab, recetas: secRecetas };
     const secTitle = SECTIONS.find((s) => s[0] === sec)[1];
+    const backLabel = staff ? 'Pacientes' : (myKids().length > 1 ? 'Expediente' : 'Inicio');
     const backHref = staff ? '#/medico/pacientes' : (myKids().length > 1 ? '#/familia/expediente' : '#/familia');
     return {
       title: `${p.name} — ${secTitle}`,
-      html: `<div class="app-bar"><a class="icon-btn" href="${backHref}" aria-label="Volver">${ic('back')}</a><h1>${staff ? 'Expediente' : 'Expediente de ' + esc(firstName(p.name))}</h1></div>
+      html: `<div class="navbar"><div class="navbar__l"><a class="back" href="${backHref}">${ic('back')}<span>${backLabel}</span></a></div><h1 class="navbar__t">${staff ? 'Expediente' : esc(firstName(p.name))}</h1><div class="navbar__r"></div></div>
       <div class="pad"><div class="card"><div class="profile">${avatar(p.name, 'lg')}<div><h2>${esc(p.name)}</h2><p>${ageText(p.birth)} · Nac. ${fmtShort(p.birth)}</p>
         <div class="pills"><span class="pill">Sangre ${esc(p.blood)}</span>${staff ? `<span class="pill">${esc(p.guardianName)} · ${esc(p.phone)}</span>` : ''}</div></div></div>
         ${p.allergies.length ? `<p class="alert alert--bad" role="note" style="margin:.9rem 0 0"><strong>Alergias:</strong> ${p.allergies.map((x) => `<span class="allergy">${esc(x)}</span>`).join('')}</p>` : ''}</div></div>
@@ -609,25 +617,51 @@
   /* =========================================================
      Diálogos
      ========================================================= */
-  function openDialog(html) {
-    const d = document.createElement('dialog'); d.className = 'modal'; d.innerHTML = html; d.setAttribute('aria-labelledby', 'dlg-title');
-    document.body.appendChild(d); d.addEventListener('close', () => d.remove()); d.showModal(); return d;
+  /* Hojas que suben desde abajo, dentro del teléfono (como en iOS) */
+  function openSheet(html) {
+    const prev = document.activeElement, root = $('#shell');
+    const wrap = document.createElement('div'); wrap.className = 'sheet-wrap';
+    wrap.innerHTML = `<div class="sheet-backdrop" data-action="close-sheet"></div><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1"><span class="grabber" aria-hidden="true"></span>${html}</div>`;
+    const others = Array.from(root.children).filter((el) => el !== wrap && el.id !== 'toasts');
+    others.forEach((el) => { el.inert = true; });
+    root.appendChild(wrap);
+    const sheet = $('.sheet', wrap);
+    const focusables = () => $$('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])', sheet).filter((el) => !el.disabled && el.offsetParent !== null);
+    wrap._close = (val) => {
+      if (!wrap.isConnected) return;
+      wrap.remove(); others.forEach((el) => { el.inert = false; });
+      if (prev && prev.isConnected) prev.focus({ preventScroll: true });
+      wrap.dispatchEvent(new CustomEvent('sheetclose', { detail: val }));
+    };
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); wrap._close('cancel'); }
+      if (e.key === 'Tab') {
+        const f = focusables(); if (!f.length) return;
+        const first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
+    const f = focusables(); (f[0] || sheet).focus({ preventScroll: true });
+    return wrap;
   }
   function confirmDialog({ title, body, ok = 'Confirmar', cancel = 'Volver', danger = false }) {
     return new Promise((res) => {
-      const d = openDialog(`<form method="dialog"><h2 id="dlg-title">${esc(title)}</h2><p>${body}</p>
-        <div class="actions actions--2"><button value="cancel" class="btn btn--ghost">${esc(cancel)}</button><button value="ok" class="btn ${danger ? 'btn--danger' : 'btn--primary'}">${esc(ok)}</button></div></form>`);
-      d.addEventListener('close', () => res(d.returnValue === 'ok'));
+      const w = openSheet(`<div class="actionsheet"><div class="as-group"><h2 id="sheet-title" class="as-title">${esc(title)}</h2><p class="as-msg">${body}</p>
+        <button type="button" class="as-btn ${danger ? 'as-btn--danger' : ''}" data-action="sheet-ok">${esc(ok)}</button></div>
+        <button type="button" class="as-btn as-btn--cancel" data-action="close-sheet">${esc(cancel)}</button></div>`);
+      w.addEventListener('sheetclose', (e) => res(e.detail === 'ok'));
     });
   }
   function rescheduleDialog(a) {
     const p = patient(a.patientId), doc = doctor(a.doctorId);
-    openDialog(`<form data-form="reschedule" data-id="${a.id}" novalidate>
-      <h2 id="dlg-title">Reprogramar cita</h2>
-      <p>${esc(p.name)} con ${esc(doc.name)}. Cita actual: <strong>${esc(fmtDate(a.date))}, ${fmtTime(a.time)}</strong>.</p>
-      <div class="field"><label for="rs-date">Nueva fecha</label><input type="date" id="rs-date" name="date" min="${todayStr()}" max="${ymd(addDays(new Date(), 60))}" data-slot-date data-box="#rs-box"></div>
-      <fieldset><legend>Horarios disponibles</legend><div id="rs-box" data-doctor="${a.doctorId}" data-ignore="${a.id}"><p class="muted">Elija primero una fecha.</p></div></fieldset>
-      <div class="actions actions--2"><button type="button" class="btn btn--ghost" data-action="close-dialog">Volver</button><button type="submit" class="btn btn--primary">Guardar cambio</button></div></form>`);
+    openSheet(`<form data-form="reschedule" data-id="${a.id}" novalidate>
+      <div class="sheet-nav"><button type="button" class="link-btn" data-action="close-sheet">Cancelar</button><h2 id="sheet-title">Reprogramar</h2><button type="submit" class="link-btn link-btn--bold">Guardar</button></div>
+      <div class="sheet-body">
+        <p class="muted" style="margin-bottom:.9rem">${esc(p.name)} con ${esc(doc.name)}.<br>Cita actual: <strong>${esc(fmtDate(a.date))}, ${fmtTime(a.time)}</strong></p>
+        <fieldset><legend>Elija un día</legend><div class="days" role="radiogroup" aria-label="Días disponibles">${dayChips(a.doctorId, '', a.id, '#rs-box', false)}</div></fieldset>
+        <fieldset><legend>Horarios disponibles</legend><div id="rs-box" data-doctor="${a.doctorId}" data-ignore="${a.id}"><p class="muted">Elija primero un día.</p></div></fieldset>
+      </div></form>`);
   }
 
   /* =========================================================
@@ -653,7 +687,9 @@
       case 'a11y-reset': prefs = Object.assign({}, PREF_DEFAULTS); applyPrefs(); announce('Ajustes de accesibilidad quitados.', false); break;
       case 'a11y-open': toggleA11y(true); break;
       case 'print': window.print(); break;
-      case 'close-dialog': t.closest('dialog').close('cancel'); break;
+      case 'close-sheet': { const w = t.closest('.sheet-wrap'); if (w) w._close('cancel'); break; }
+      case 'sheet-ok': { const w = t.closest('.sheet-wrap'); if (w) w._close('ok'); break; }
+      case 'theme': { const o = ['auto', 'light', 'dark']; prefs.theme = o[(o.indexOf(prefs.theme) + 1) % 3]; applyPrefs(); announce('Tema ' + THEME_NAMES[prefs.theme].toLowerCase(), false); break; }
       case 'booking-reset': ui.booking = null; break;
       case 'booking-back': ui.booking.step--; ui.booking.error = null; render(); break;
       case 'tab-appt': ui.apptTab = t.dataset.tab; render(true); break;
@@ -667,7 +703,7 @@
       }
       case 'cancel': {
         const a = state.appointments.find((x) => x.id === id), p = patient(a.patientId);
-        const ok = await confirmDialog({ title: '¿Cancelar la cita?', body: `Cita de <strong>${esc(p.name)}</strong> el ${esc(fmtDate(a.date))} a las ${fmtTime(a.time)}. El espacio quedará libre para otra familia.`, ok: 'Sí, cancelar', cancel: 'No, mantener', danger: true });
+        const ok = await confirmDialog({ title: '¿Cancelar la cita?', body: `Cita de <strong>${esc(p.name)}</strong> el ${esc(fmtDate(a.date))} a las ${fmtTime(a.time)} El espacio quedará libre para otra familia.`, ok: 'Sí, cancelar', cancel: 'No, mantener', danger: true });
         if (ok) { a.status = 'cancelada'; save(); announce('Cita cancelada.'); render(); }
         break;
       }
@@ -719,7 +755,7 @@
       if (formErrors(form, errs)) return;
       const a = state.appointments.find((x) => x.id === form.dataset.id);
       if (!slotsFor(a.doctorId, fd.date, a.id).includes(fd.time)) { formErrors(form, [['time', 'Ese horario ya no está disponible. Elija otro.']]); return; }
-      a.date = fd.date; a.time = fd.time; save(); form.closest('dialog').close('ok');
+      a.date = fd.date; a.time = fd.time; save(); form.closest('.sheet-wrap')._close('ok');
       announce(`Cita reprogramada para el ${fmtDate(a.date)} a las ${fmtTime(a.time)}.`); render();
     }
     if (kind === 'note') {
@@ -754,7 +790,7 @@
       announce(`Nueva cita agendada: ${p.name}, ${fmtDate(a.date)} a las ${fmtTime(a.time)}.`);
     }
     const typing = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
-    if (!typing && !$('dialog[open]')) render(true);
+    if (!typing && !$('.sheet-wrap')) render(true);
   }
   if (channel) channel.onmessage = onExternalUpdate;
   window.addEventListener('storage', (e) => { if (e.key === KEY) onExternalUpdate(); });
@@ -768,6 +804,6 @@
   setInterval(tick, 30000);
 
   window.addEventListener('hashchange', () => { if (!location.hash.includes('citas/nueva') && ui.booking && ui.booking.done) ui.booking = null; render(); });
-  mqWide.addEventListener ? mqWide.addEventListener('change', () => setUiMode(route())) : null;
+  if (mqWide.addEventListener) { mqWide.addEventListener('change', () => setUiMode(route())); mqDark.addEventListener('change', applyPrefs); }
   applyPrefs(); fitDevice(); tick(); render();
 })();
