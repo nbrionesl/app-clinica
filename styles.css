@@ -292,3 +292,4 @@ html[data-plain="on"] body, html[data-plain="on"] button, html[data-plain="on"] 
 @media print { .a11y-widget { display: none !important; } }
 [tabindex="-1"]:focus, [tabindex="-1"]:focus-visible { outline: none; }
 .error-summary:focus { outline: 3px solid var(--focus); }
+.brand__logo { width: 2.9rem; height: 2.9rem; background: none; transform: none; border-radius: 0; filter: drop-shadow(0 3px 6px rgba(11, 110, 117, .3)); }
