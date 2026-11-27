@@ -140,11 +140,11 @@
   function navFor(parts) {
     const role = parts[0];
     if (role === 'familia') {
-      const items = [['familia', '🏠', 'Inicio'], ['familia/citas', '🗓', 'Mis citas'], ['familia/expediente', '📋', 'Expediente'], ['medico', '↔', 'Ir a personal médico']];
+      const items = [['familia', '🏠', 'Inicio'], ['familia/citas', '🗓', 'Mis citas'], ['familia/expediente', '📋', 'Expediente'], ['medico', '↔', 'Personal médico']];
       return items;
     }
     if (role === 'medico') {
-      return [['medico', '🗓', 'Agenda'], ['medico/pacientes', '👥', 'Pacientes'], ['familia', '↔', 'Ir a familias']];
+      return [['medico', '🗓', 'Agenda'], ['medico/pacientes', '👥', 'Pacientes'], ['familia', '↔', 'Familias']];
     }
     return [];
   }
@@ -607,6 +607,13 @@
       case 'pref': prefs[t.dataset.pref] = !prefs[t.dataset.pref]; applyPrefs(); break;
       case 'a11y-reset': prefs = Object.assign({}, PREF_DEFAULTS); applyPrefs(); announce('Ajustes de accesibilidad quitados.', false); break;
       case 'print': window.print(); break;
+      case 'device': {
+        const base = location.href.split('#')[0].split('?')[0];
+        const d = openDialog(`<div class="phone-wrap"><div class="phone"><iframe title="Vista de celular de la aplicación" src="${base}?embed=1${location.hash}"></iframe></div>
+          <button type="button" class="btn btn--primary" data-action="close-dialog">Volver a vista de escritorio</button></div>`);
+        d.classList.add('device-modal'); d.setAttribute('aria-label', 'Vista de celular'); d.removeAttribute('aria-labelledby');
+        break;
+      }
       case 'close-dialog': t.closest('dialog').close('cancel'); break;
       case 'booking-reset': ui.booking = null; break;
       case 'booking-back': ui.booking.step--; ui.booking.error = null; render(); break;
@@ -720,6 +727,7 @@
   }, 30000);
 
   window.addEventListener('hashchange', () => { if (!location.hash.includes('citas/nueva')) { if (ui.booking && ui.booking.done) ui.booking = null; } render(); });
+  if (/[?&]embed=1/.test(location.search)) { const b = $('#device-btn'); if (b) b.remove(); document.documentElement.dataset.embed = 'on'; }
   applyPrefs();
   render();
 })();
