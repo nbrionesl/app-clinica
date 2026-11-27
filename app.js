@@ -175,6 +175,11 @@
     h.dataset.top = dark ? 'dark' : 'light';
     h.dataset.booking = parts[0] === 'familia' && parts[1] === 'citas' && parts[2] === 'nueva' ? 'on' : 'off';
   }
+  function fitDevice() {
+    const z = Math.max(1, Math.min(1.6, (window.innerHeight - 58) / 902, (window.innerWidth - 24) / 462));
+    document.documentElement.style.setProperty('--dz', z.toFixed(3));
+  }
+  window.addEventListener('resize', fitDevice);
   const resetScroll = () => { const s = $('#scroller'); if (s) s.scrollTop = 0; window.scrollTo(0, 0); };
 
   function navFor(parts) {
@@ -764,5 +769,5 @@
 
   window.addEventListener('hashchange', () => { if (!location.hash.includes('citas/nueva') && ui.booking && ui.booking.done) ui.booking = null; render(); });
   mqWide.addEventListener ? mqWide.addEventListener('change', () => setUiMode(route())) : null;
-  applyPrefs(); tick(); render();
+  applyPrefs(); fitDevice(); tick(); render();
 })();
