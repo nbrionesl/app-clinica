@@ -181,6 +181,7 @@
     } else out = notFound();
     const main = $('#main');
     main.innerHTML = out.html;
+    if (!keepFocus) { main.classList.remove('page-in'); void main.offsetWidth; main.classList.add('page-in'); }
     document.title = `${out.title} — Pequeños Pasos`;
     if (keepFocus && lastFocusId) {
       const el = document.getElementById(lastFocusId) || $(`[data-fid="${lastFocusId}"]`);
@@ -609,9 +610,21 @@
       case 'print': window.print(); break;
       case 'device': {
         const base = location.href.split('#')[0].split('?')[0];
-        const d = openDialog(`<div class="phone-wrap"><div class="phone"><iframe title="Vista de celular de la aplicación" src="${base}?embed=1${location.hash}"></iframe></div>
-          <button type="button" class="btn btn--primary" data-action="close-dialog">Volver a vista de escritorio</button></div>`);
+        const clock = () => new Date().toLocaleTimeString('es-CR', { hour: 'numeric', minute: '2-digit', hour12: false });
+        const d = openDialog(`<div class="phone-wrap">
+          <div class="device" aria-hidden="false">
+            <span class="device__btn device__btn--a"></span><span class="device__btn device__btn--b"></span><span class="device__btn device__btn--c"></span><span class="device__btn device__btn--p"></span>
+            <div class="device__screen">
+              <div class="statusbar" aria-hidden="true"><span class="sb-time">${clock()}</span><span class="island"></span>
+                <span class="sb-icons"><svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx=".8"/><rect x="5" y="5.500" width="3" height="6.500" rx=".8"/><rect x="10" y="3" width="3" height="9" rx=".8"/><rect x="15" y="0" width="3" height="12" rx=".8"/></svg>
+                <svg viewBox="0 0 16 12" width="16" height="12" fill="none" stroke="currentColor" stroke-width="1.800" stroke-linecap="round"><path d="M1 4.200a10 10 0 0 1 14 0M3.500 6.800a6.500 6.500 0 0 1 9 0"/><circle cx="8" cy="9.800" r="1.200" fill="currentColor" stroke="none"/></svg>
+                <svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="22" height="11" rx="3.200" fill="none" stroke="currentColor"/><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor"/></svg></span></div>
+              <iframe title="Vista de celular de la aplicación" src="${base}?embed=1${location.hash}"></iframe>
+              <div class="homebar" aria-hidden="true"><span></span></div>
+            </div></div>
+          <button type="button" class="btn btn--primary" data-action="close-dialog">Salir de la vista de celular</button></div>`);
         d.classList.add('device-modal'); d.setAttribute('aria-label', 'Vista de celular'); d.removeAttribute('aria-labelledby');
+        const tick = setInterval(() => { const el = $('.sb-time', d); if (!el || !d.open) return clearInterval(tick); el.textContent = clock(); }, 20000);
         break;
       }
       case 'close-dialog': t.closest('dialog').close('cancel'); break;
