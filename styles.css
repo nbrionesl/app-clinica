@@ -81,10 +81,10 @@ main { flex: 1; display: flex; flex-direction: column; outline: none; }
 /* ---------- Marco de teléfono (escritorio, modo app) ---------- */
 html[data-frame="on"] body { background: radial-gradient(900px 600px at 50% 35%, #0f5a61, #061c20); min-height: 100vh; }
 html[data-frame="on"] .stage { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .4rem; padding: .8rem 1rem .4rem; }
-html[data-frame="on"] .device { position: relative; width: 440px; zoom: var(--dz, 1); padding: 11px; border-radius: 62px; background: linear-gradient(145deg, #2b3a40, #0b1316); box-shadow: 0 0 0 2px #51656c, 0 30px 70px rgba(0, 0, 0, .6), inset 0 0 0 2px #000; }
+html[data-frame="on"] .device { position: relative; width: 412px; zoom: var(--dz, 1); padding: 11px; border-radius: 62px; background: linear-gradient(145deg, #2b3a40, #0b1316); box-shadow: 0 0 0 2px #51656c, 0 30px 70px rgba(0, 0, 0, .6), inset 0 0 0 2px #000; }
 html[data-frame="on"] .device__btn { display: block; position: absolute; width: 4px; background: #3c4d54; border-radius: 3px; }
 .device__btn--a { left: -4px; top: 110px; height: 30px; } .device__btn--b { left: -4px; top: 165px; height: 56px; } .device__btn--c { left: -4px; top: 235px; height: 56px; } .device__btn--p { right: -4px; top: 190px; height: 86px; }
-html[data-frame="on"] .app-shell { height: 880px; min-height: 0; border-radius: 50px; overflow: hidden; transform: translateZ(0); display: flex; flex-direction: column; }
+html[data-frame="on"] .app-shell { height: 844px; min-height: 0; border-radius: 50px; overflow: hidden; transform: translateZ(0); display: flex; flex-direction: column; }
 html[data-frame="on"] .app-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; scroll-behavior: smooth; }
 html[data-frame="on"] .app-scroll::-webkit-scrollbar { display: none; }
 html[data-frame="on"] .statusbar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; flex: none; height: 46px; padding: 8px 26px 0; font-size: .82rem; font-weight: 600; background: var(--bg); color: var(--text); }
@@ -492,3 +492,8 @@ html[data-ui="web"] .a11y-widget { max-height: calc(100% - 3rem); }
 /* Texto grande (Dynamic Type): los accesos rápidos pasan a una columna en lugar de desbordarse */
 .tiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); }
 .tile { min-width: 0; overflow-wrap: anywhere; }
+
+/* El teléfono siempre cabe completo en la ventana (zoom del navegador al 100 %) */
+html[data-frame="on"] body { overflow: hidden; height: 100vh; }
+html[data-frame="on"] .stage { min-height: 0; height: 100vh; padding: 8px 1rem; }
+html[data-frame="on"] .stage-note { display: none; }

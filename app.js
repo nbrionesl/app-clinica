@@ -180,7 +180,7 @@
     h.dataset.booking = parts[0] === 'familia' && parts[1] === 'citas' && parts[2] === 'nueva' ? 'on' : 'off';
   }
   function fitDevice() {
-    const z = Math.max(1, Math.min(1.6, (window.innerHeight - 58) / 902, (window.innerWidth - 24) / 462));
+    const z = Math.max(.5, Math.min(1.5, (window.innerHeight - 16) / 866, (window.innerWidth - 24) / 412));
     document.documentElement.style.setProperty('--dz', z.toFixed(3));
   }
   window.addEventListener('resize', fitDevice);
